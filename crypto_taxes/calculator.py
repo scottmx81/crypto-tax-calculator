@@ -29,7 +29,7 @@ class CSVReader():
     """
     Reads in the CSV files from the exchanges.
     """
-    def read_trades(self, filename):
+    def read_trades(self, filename, target_asset):
         """
         Read the trades from the CSV file.
         """
@@ -39,13 +39,13 @@ class CSVReader():
             reader = csv.DictReader(csvfile)
 
             for row in reader:
-                if row['major'] != 'eth' and row['minor'] != 'eth':
+                if target_asset not in (row['major'], row['minor']):
                     continue
 
                 trade = {
                     'type': row['type'],
-                    'major': row['major'],
-                    'minor': row['minor'],
+                    'major': row['major'].lower(),
+                    'minor': row['minor'].lower(),
                     'amount': Decimal(row['amount']),
                     'rate': Decimal(row['rate']),
                     'value': Decimal(row['value']),

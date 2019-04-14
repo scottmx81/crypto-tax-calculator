@@ -8,6 +8,7 @@ from calculator import Calculator, CSVReader, read_exchange_rates
 
 
 DEFAULT_BASE_CURRENCY = 'cad'
+DEFAULT_ASSET = 'btc'
 
 
 def main():
@@ -16,7 +17,7 @@ def main():
     """
     args = parse_args()
 
-    trades = read_trade_files(args.trades)
+    trades = read_trade_files(args.trades, args.asset)
     exchange_rates = read_exchange_rates(args.exchange_rates)
 
     calculator = Calculator(
@@ -63,6 +64,12 @@ def parse_args():
         type=Decimal,
     )
     parser.add_argument(
+        '--asset',
+        default=DEFAULT_ASSET,
+        help='The symbol of the crypto asset that was traded',
+        type=str,
+    )
+    parser.add_argument(
         'trades',
         help='Path to CSV file(s) containing trade history',
         type=str,
@@ -71,24 +78,24 @@ def parse_args():
     return parser.parse_args()
 
 
-def read_trade_files(filenames):
+def read_trade_files(filenames, asset):
     """
     Read the trade CSV files.
     """
     trades = []
 
     for filename in filenames:
-        trades += read_trade_file(filename)
+        trades += read_trade_file(filename, asset)
 
     return trades
 
 
-def read_trade_file(filename):
+def read_trade_file(filename, target_asset):
     """
     Read the trades from a single CSV file.
     """
     csv_reader = CSVReader()
-    return csv_reader.read_trades(filename)
+    return csv_reader.read_trades(filename, target_asset)
 
 
 def print_result(result):
