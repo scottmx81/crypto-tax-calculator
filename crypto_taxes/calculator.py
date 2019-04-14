@@ -62,7 +62,6 @@ class CSVReader():
         return trades
 
 
-
 class Calculator():
     """
     Tax calculator for crypto trades.
@@ -72,10 +71,11 @@ class Calculator():
         self.exchange_rates = exchange_rates if exchange_rates else {}
         self.base_currency = base_currency
 
-    def calculate(self, acb=Decimal('0')):
+    def calculate(self, initial_acb=None):
         """
         Perform the calculations.
         """
+        acb = initial_acb if initial_acb is not None else Decimal('0')
         sum_acb_dispositions = Decimal('0')
         units_held = Decimal('0')
         capital_gains = Decimal('0')

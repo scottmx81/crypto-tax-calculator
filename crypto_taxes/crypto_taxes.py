@@ -2,6 +2,7 @@
 Crypto tax calculator.
 """
 import argparse
+from decimal import Decimal
 
 from calculator import Calculator, CSVReader, read_exchange_rates
 
@@ -18,8 +19,13 @@ def main():
     trades = read_trade_files(args.trades)
     exchange_rates = read_exchange_rates(args.exchange_rates)
 
-    calculator = Calculator(trades, exchange_rates, args.base_currency)
-    result = calculator.calculate()
+    calculator = Calculator(
+        trades,
+        exchange_rates,
+        args.base_currency,
+
+    )
+    result = calculator.calculate(initial_acb=args.initial_acb)
 
     print_result(result)
 
@@ -40,6 +46,12 @@ def parse_args():
         default=DEFAULT_BASE_CURRENCY,
         help="Path to CSV file containing historical exchange rates",
         type=str,
+    )
+    parser.add_argument(
+        '--initial-acb',
+        default=Decimal('0'),
+        help='The initial acb if prior trade history is not available',
+        type=Decimal,
     )
     parser.add_argument(
         'trades',
