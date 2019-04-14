@@ -25,7 +25,10 @@ def main():
         args.base_currency,
 
     )
-    result = calculator.calculate(initial_acb=args.initial_acb)
+    result = calculator.calculate(
+        initial_acb=args.initial_acb,
+        initial_units_held=args.initial_units_held,
+    )
 
     print_result(result)
 
@@ -51,6 +54,12 @@ def parse_args():
         '--initial-acb',
         default=Decimal('0'),
         help='The initial acb if prior trade history is not available',
+        type=Decimal,
+    )
+    parser.add_argument(
+        '--initial-units-held',
+        default=Decimal('0'),
+        help='The initial units held if prior trade history is not available',
         type=Decimal,
     )
     parser.add_argument(
