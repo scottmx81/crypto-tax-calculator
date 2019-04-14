@@ -24,9 +24,9 @@ def main():
         trades,
         exchange_rates,
         args.base_currency,
-
     )
     result = calculator.calculate(
+        tax_year=args.tax_year,
         initial_acb=args.initial_acb,
         initial_units_held=args.initial_units_held,
     )
@@ -68,6 +68,12 @@ def parse_args():
         default=DEFAULT_ASSET,
         help='The symbol of the crypto asset that was traded',
         type=str,
+    )
+    parser.add_argument(
+        '--tax-year',
+        default=None,
+        help='The tax year to perform calculations for',
+        type=int,
     )
     parser.add_argument(
         'trades',

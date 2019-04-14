@@ -3,7 +3,7 @@ Crypto Tax Calculator.
 """
 from copy import deepcopy
 import csv
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -54,9 +54,6 @@ class CSVReader():
                     'timestamp': float(row['timestamp']),
                 }
 
-                if trade['dt'] > datetime(2018, 1, 1, 0, 0, 0):
-                    continue
-
                 trades.append(trade)
 
         return trades
@@ -71,10 +68,16 @@ class Calculator():
         self.exchange_rates = exchange_rates if exchange_rates else {}
         self.base_currency = base_currency
 
-    def calculate(self, initial_acb=None, initial_units_held=None):
+    def calculate(
+            self,
+            tax_year=None,
+            initial_acb=None,
+            initial_units_held=None
+    ):
         """
         Perform the calculations.
         """
+        tax_year = tax_year if tax_year is not None else date.today().year
         acb = initial_acb if initial_acb is not None else Decimal('0')
         units_held = initial_units_held \
             if initial_units_held is not None else Decimal('0')
@@ -86,11 +89,15 @@ class Calculator():
         trades = self.trades
         trades.sort(key=lambda trade: trade['timestamp'])
 
-        self.convert_currency(trades, self.exchange_rates)
-
         events = []
 
         for trade in trades:
+            if trade['dt'] < datetime(tax_year, 1, 1, 0, 0, 0) or \
+                    trade['dt'] >= datetime(tax_year+1, 1, 1, 0, 0, 0):
+                continue
+
+            self.convert_currency(trade)
+
             if trade['type'] == 'buy':
                 acb = acb + trade['value']
                 units_held += trade['total']
@@ -145,19 +152,19 @@ class Calculator():
             'capital_gains': capital_gains,
         }
 
-    def convert_currency(self, trades, exchange_rates):
+    def convert_currency(self, trade):
         """
         Convert the foreign fiat values into the base currency using
         the given exchange rates.
         """
-        for trade in trades:
-            if trade['minor'] == self.base_currency:
-                trade['exchange_rate'] = 1
-            else:
-                date_string = trade['dt'].strftime('%Y/%m/%d')
-                trade['exchange_rate'] = \
-                    exchange_rates[date_string][trade['minor']]
-                trade['rate'] = trade['rate'] / trade['exchange_rate']
-                trade['value'] = trade['value'] / trade['exchange_rate']
-                if trade['type'] == 'sell':
-                    trade['total'] = trade['total'] / trade['exchange_rate']
+        if trade['minor'] == self.base_currency:
+            trade['exchange_rate'] = 1
+            return
+
+        date_string = trade['dt'].strftime('%Y/%m/%d')
+        trade['exchange_rate'] = \
+            self.exchange_rates[date_string][trade['minor']]
+        trade['rate'] = trade['rate'] / trade['exchange_rate']
+        trade['value'] = trade['value'] / trade['exchange_rate']
+        if trade['type'] == 'sell':
+            trade['total'] = trade['total'] / trade['exchange_rate']
