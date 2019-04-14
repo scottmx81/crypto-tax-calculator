@@ -20,7 +20,7 @@ Set up virtualenv with:
 
 Run the script with the command:
 
-`python crypto_taxes/crypto_taxes.sh --exchange-rates <exchange-rates.csv> <trades.csv>`
+`python crypto_taxes/crypto_taxes.sh --exchange-rates [EXCHANGE_RATE_CSV] [TRADE_CSVS]...`
 
 ## License
 

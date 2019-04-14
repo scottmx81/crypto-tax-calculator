@@ -15,9 +15,7 @@ def main():
     """
     args = parse_args()
 
-    csv_reader = CSVReader()
-    trades = csv_reader.read_trades(args.trades)
-
+    trades = read_trade_files(args.trades)
     exchange_rates = read_exchange_rates(args.exchange_rates)
 
     calculator = Calculator(trades, exchange_rates, args.base_currency)
@@ -47,8 +45,29 @@ def parse_args():
         'trades',
         help='Path to CSV file(s) containing trade history',
         type=str,
+        nargs='+',
     )
     return parser.parse_args()
+
+
+def read_trade_files(filenames):
+    """
+    Read the trade CSV files.
+    """
+    trades = []
+
+    for filename in filenames:
+        trades += read_trade_file(filename)
+
+    return trades
+
+
+def read_trade_file(filename):
+    """
+    Read the trades from a single CSV file.
+    """
+    csv_reader = CSVReader()
+    return csv_reader.read_trades(filename)
 
 
 def print_result(result):
