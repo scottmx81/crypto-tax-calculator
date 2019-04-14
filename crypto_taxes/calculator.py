@@ -29,13 +29,13 @@ class CSVReader():
     """
     Reads in the CSV files from the exchanges.
     """
-    def read_trades(self, fn):
+    def read_trades(self, filename):
         """
         Read the trades from the CSV file.
         """
         trades = []
 
-        with open(fn, 'rt') as csvfile:
+        with open(filename, 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
 
             for row in reader:
