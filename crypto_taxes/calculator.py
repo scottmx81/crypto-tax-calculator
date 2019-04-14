@@ -7,22 +7,13 @@ from datetime import date, datetime
 from decimal import Decimal
 
 
-def read_exchange_rates(filename):
+def is_target_tax_year(trade_date, tax_year):
     """
-    Read exchange rates from CSV.
+    Check if the trade date is within the target tax year.
     """
-    exchange_rates = {}
-
-    with open(filename, 'rt') as csvfile:
-        reader = csv.DictReader(csvfile)
-
-        for row in reader:
-            if not row['date'] in exchange_rates:
-                exchange_rates[row['date']] = {}
-                exchange_rates[row['date']][row['currency']] = \
-                    Decimal(row['rate'])
-
-    return exchange_rates
+    year_start = datetime(tax_year, 1, 1, 0, 0, 0)
+    next_year_start = datetime(tax_year+1, 1, 1, 0, 0, 0)
+    return year_start <= trade_date < next_year_start
 
 
 class CSVReader():
@@ -86,14 +77,10 @@ class Calculator():
         buys = Decimal('0')
         sells = Decimal('0')
 
-        trades = self.trades
-        trades.sort(key=lambda trade: trade['timestamp'])
-
         events = []
 
-        for trade in trades:
-            if trade['dt'] < datetime(tax_year, 1, 1, 0, 0, 0) or \
-                    trade['dt'] >= datetime(tax_year+1, 1, 1, 0, 0, 0):
+        for trade in self.trades:
+            if not is_target_tax_year(trade['dt'], tax_year):
                 continue
 
             self.convert_currency(trade)

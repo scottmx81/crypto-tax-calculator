@@ -2,9 +2,11 @@
 Crypto tax calculator.
 """
 import argparse
+import csv
 from decimal import Decimal
+from sys import stderr
 
-from calculator import Calculator, CSVReader, read_exchange_rates
+from calculator import Calculator, CSVReader
 
 
 DEFAULT_BASE_CURRENCY = 'cad'
@@ -19,6 +21,18 @@ def main():
 
     trades = read_trade_files(args.trades, args.asset)
     exchange_rates = read_exchange_rates(args.exchange_rates)
+
+    trades.sort(key=lambda trade: trade['timestamp'])
+
+    missing_exchange_rates = find_missing_exchange_rates(
+        trades,
+        exchange_rates,
+        args.base_currency
+    )
+
+    if missing_exchange_rates:
+        print_missing_exchange_rates(missing_exchange_rates)
+        raise SystemExit
 
     calculator = Calculator(
         trades,
@@ -47,7 +61,7 @@ def parse_args():
     )
     parser.add_argument(
         '--exchange-rates',
-        default=DEFAULT_BASE_CURRENCY,
+        default=None,
         help="Path to CSV file containing historical exchange rates",
         type=str,
     )
@@ -102,6 +116,63 @@ def read_trade_file(filename, target_asset):
     """
     csv_reader = CSVReader()
     return csv_reader.read_trades(filename, target_asset)
+
+
+def read_exchange_rates(filename):
+    """
+    Read exchange rates from CSV.
+    """
+    exchange_rates = {}
+
+    if filename:
+        with open(filename, 'rt') as csvfile:
+            reader = csv.DictReader(csvfile)
+
+            for row in reader:
+                if not row['date'] in exchange_rates:
+                    exchange_rates[row['date']] = {}
+                    exchange_rates[row['date']][row['currency']] = \
+                        Decimal(row['rate'])
+
+    return exchange_rates
+
+
+def find_missing_exchange_rates(trades, exchange_rates, base_currency):
+    """
+    Validate exchange rates are present for all trade dates.
+    """
+    missing_dates = []
+
+    for trade in trades:
+        if trade['minor'] == base_currency:
+            continue
+
+        date_string = trade['dt'].strftime('%Y/%m/%d')
+
+        if date_string not in exchange_rates or \
+                trade['minor'] not in exchange_rates[date_string]:
+            missing_dates.append({
+                'date': date_string,
+                'currency': trade['minor'],
+            })
+
+    return missing_dates
+
+
+def print_missing_exchange_rates(missing_exchange_rates):
+    """
+    Print the dates for which exchange rates are missing.
+    """
+    print('The following exchange rates are missing:', file=stderr)
+
+    for missing_exchange_rate in missing_exchange_rates:
+        print(
+            '{} {}'.format(
+                missing_exchange_rate['date'],
+                missing_exchange_rate['currency'],
+            ),
+            file=stderr
+        )
 
 
 def print_result(result):
