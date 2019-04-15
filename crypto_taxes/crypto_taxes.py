@@ -7,6 +7,7 @@ from decimal import Decimal
 from sys import stderr
 
 from calculator import Calculator, CSVReader
+from exceptions import InsufficientUnitsError
 
 
 DEFAULT_BASE_CURRENCY = 'cad'
@@ -39,11 +40,24 @@ def main():
         exchange_rates,
         args.base_currency,
     )
-    result = calculator.calculate(
-        tax_year=args.tax_year,
-        initial_acb=args.initial_acb,
-        initial_units_held=args.initial_units_held,
-    )
+
+    try:
+        result = calculator.calculate(
+            tax_year=args.tax_year,
+            initial_acb=args.initial_acb,
+            initial_units_held=args.initial_units_held,
+        )
+    except InsufficientUnitsError as err:
+        print(
+            '{}\n\n'
+            'Consider using the --initial-acb and --initial-units-held '
+            'options if you have trades from prior years.'.format(
+                str(err),
+            ),
+
+            file=stderr
+        )
+        raise SystemExit
 
     print_result(result)
 

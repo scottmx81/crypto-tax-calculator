@@ -6,6 +6,8 @@ import csv
 from datetime import date, datetime
 from decimal import Decimal
 
+from exceptions import InsufficientUnitsError
+
 
 def is_target_tax_year(trade_date, tax_year):
     """
@@ -105,6 +107,13 @@ class Calculator():
                 })
 
             if trade['type'] == 'sell':
+                if trade['amount'] > units_held:
+                    raise InsufficientUnitsError(
+                        trade['dt'],
+                        trade['amount'],
+                        units_held,
+                    )
+
                 capital_gain = \
                     (trade['total']) - ((acb / units_held) * trade['amount'])
                 capital_gains += capital_gain
