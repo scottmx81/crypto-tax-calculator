@@ -7,7 +7,7 @@ from decimal import Decimal
 from sys import stderr
 
 from calculator import Calculator, CSVReader
-from exceptions import InsufficientUnitsError
+from exceptions import InsufficientUnitsError, UnrecognizedFormatError
 
 
 DEFAULT_BASE_CURRENCY = 'cad'
@@ -20,7 +20,17 @@ def main():
     """
     args = parse_args()
 
-    trades = read_trade_files(args.trades, args.asset)
+    try:
+        trades = read_trade_files(args.trades, args.asset)
+    except UnrecognizedFormatError as err:
+        print(
+            'The CSV format could not be recognized: {}'.format(
+                err.header,
+            ),
+            file=stderr
+        )
+        raise SystemExit
+
     exchange_rates = read_exchange_rates(args.exchange_rates)
 
     trades.sort(key=lambda trade: trade['timestamp'])
@@ -47,6 +57,7 @@ def main():
             initial_acb=args.initial_acb,
             initial_units_held=args.initial_units_held,
         )
+
     except InsufficientUnitsError as err:
         print(
             '{}\n\n'

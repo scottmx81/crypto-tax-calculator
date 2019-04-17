@@ -7,6 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from exceptions import InsufficientUnitsError
+from parsers import get_parser
 
 
 def is_target_tax_year(trade_date, tax_year):
@@ -30,22 +31,13 @@ class CSVReader():
 
         with open(filename, 'rt') as csvfile:
             reader = csv.DictReader(csvfile)
+            parser = get_parser(reader)
 
             for row in reader:
+                trade = parser.parse_row(row)
+
                 if target_asset not in (row['major'], row['minor']):
                     continue
-
-                trade = {
-                    'type': row['type'],
-                    'major': row['major'].lower(),
-                    'minor': row['minor'].lower(),
-                    'amount': Decimal(row['amount']),
-                    'rate': Decimal(row['rate']),
-                    'value': Decimal(row['value']),
-                    'total': Decimal(row['total']),
-                    'dt': datetime.fromtimestamp(float(row['timestamp'])),
-                    'timestamp': float(row['timestamp']),
-                }
 
                 trades.append(trade)
 

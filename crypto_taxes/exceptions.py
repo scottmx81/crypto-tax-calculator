@@ -19,3 +19,12 @@ class InsufficientUnitsError(Exception):
             self.trade_date,
             self.units_held,
         )
+
+
+class UnrecognizedFormatError(Exception):
+    """
+    The format of the CSV field could not be recognized.
+    """
+    def __init__(self, header):
+        self.header = header
+        super(UnrecognizedFormatError, self).__init__()
