@@ -8,7 +8,7 @@ format.
 from datetime import datetime
 from decimal import Decimal
 
-from exceptions import UnrecognizedFormatError
+from .exceptions import UnrecognizedFormatError
 
 
 def get_parser(reader):

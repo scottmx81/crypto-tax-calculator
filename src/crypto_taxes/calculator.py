@@ -6,8 +6,8 @@ import csv
 from datetime import date, datetime
 from decimal import Decimal
 
-from exceptions import InsufficientUnitsError
-from parsers import get_parser
+from .exceptions import InsufficientUnitsError
+from .parsers import get_parser
 
 
 def is_target_tax_year(trade_date, tax_year):

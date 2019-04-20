@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Crypto tax calculator.
 """
@@ -6,8 +7,11 @@ import csv
 from decimal import Decimal
 from sys import stderr
 
-from calculator import Calculator, CSVReader
-from exceptions import InsufficientUnitsError, UnrecognizedFormatError
+from crypto_taxes.calculator import Calculator, CSVReader
+from crypto_taxes.exceptions import (
+    InsufficientUnitsError,
+    UnrecognizedFormatError
+)
 
 
 DEFAULT_BASE_CURRENCY = 'cad'
