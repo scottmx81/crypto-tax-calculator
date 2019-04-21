@@ -1,13 +1,43 @@
 """
 Tests for the exported CSV file formats from the exchanges.
 """
+from csv import DictReader
 from datetime import datetime
 from decimal import Decimal
+from io import StringIO
+
+import pytest
 
 from crypto_taxes import parsers
+from crypto_taxes.exceptions import UnrecognizedFormatError
 
 
-def test_parse_row():
+def test_get_parser_header_matches():
+    """
+    Get parser returns a parser class when the header matches one in the map.
+    """
+    csvfile = StringIO(
+        'type,major,minor,amount,rate,value,fee,total,timestamp,datetime\n'
+    )
+    reader = DictReader(csvfile)
+    parser = parsers.get_parser(reader)
+    assert parser.__class__ == parsers.BitsoQCXParser
+
+
+def test_get_parser_header_unrecognized():
+    """
+    Get parser raises unrecognized format error when header is not recognized.
+    """
+    csvfile = StringIO(
+        'unrecognized,fields\n'
+    )
+    reader = DictReader(csvfile)
+
+    with pytest.raises(UnrecognizedFormatError):
+        parsers.get_parser(reader)
+
+
+def test_bitso_qcx_parse_row():
     """
     The Bitso & QuadrigaCX parser returns a row in the normalized format.
     """
