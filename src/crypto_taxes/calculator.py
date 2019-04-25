@@ -94,9 +94,23 @@ class Calculator():
         self.convert_currency(trade)
 
         if trade['type'] == 'buy':
-            event = self.process_buy(trade, tabulations)
+            capital_gain = self.process_buy(trade, tabulations)
         elif trade['type'] == 'sell':
-            event = self.process_sell(trade, tabulations)
+            capital_gain = self.process_sell(trade, tabulations)
+
+        event = {
+            'action': trade['type'],
+            'major': trade['major'],
+            'minor': trade['minor'],
+            'amount': trade['amount'],
+            'dt': trade['dt'],
+            'acb': tabulations['acb'],
+            'rate': trade['rate'],
+            'units_held': tabulations['units_held'],
+            'exchange_rate': trade['exchange_rate'],
+            'capital_gains': tabulations['capital_gains'],
+            'capital_gain': capital_gain,
+        }
 
         return event
 
@@ -108,19 +122,7 @@ class Calculator():
         tabulations['units_held'] += trade['total']
         tabulations['buys'] += trade['value']
 
-        return {
-            'action': 'Buy',
-            'major': trade['major'],
-            'minor': trade['minor'],
-            'amount': trade['amount'],
-            'rate': trade['rate'],
-            'dt': trade['dt'],
-            'acb': tabulations['acb'],
-            'units_held': tabulations['units_held'],
-            'capital_gain': '',
-            'capital_gains': '',
-            'exchange_rate': trade['exchange_rate'],
-        }
+        return Decimal('0')
 
     def process_sell(self, trade, tabulations):
         """
@@ -148,22 +150,9 @@ class Calculator():
             / tabulations['units_held']
         )
         tabulations['units_held'] -= trade['amount']
-
         tabulations['sells'] += trade['value']
 
-        return {
-            'action': 'Sell',
-            'major': trade['major'],
-            'minor': trade['minor'],
-            'amount': trade['amount'],
-            'rate': trade['rate'],
-            'dt': trade['dt'],
-            'acb': tabulations['acb'],
-            'units_held': tabulations['units_held'],
-            'capital_gain': capital_gain,
-            'capital_gains': tabulations['capital_gains'],
-            'exchange_rate': trade['exchange_rate'],
-        }
+        return capital_gain
 
     def convert_currency(self, trade):
         """
