@@ -63,13 +63,16 @@ class Calculator():
         Perform the calculations.
         """
         tax_year = tax_year if tax_year is not None else date.today().year
-        acb = initial_acb if initial_acb is not None else Decimal('0')
-        units_held = initial_units_held \
-            if initial_units_held is not None else Decimal('0')
-        sum_acb_dispositions = Decimal('0')
-        capital_gains = Decimal('0')
-        buys = Decimal('0')
-        sells = Decimal('0')
+        tabulations = {
+            'acb': initial_acb if initial_acb is not None else Decimal('0'),
+            'units_held':
+                initial_units_held if initial_units_held is not None
+                else Decimal('0'),
+            'sum_acb_dispositions': Decimal('0'),
+            'capital_gains': Decimal('0'),
+            'buys': Decimal('0'),
+            'sells': Decimal('0'),
+        }
 
         events = []
 
@@ -77,67 +80,89 @@ class Calculator():
             if not is_target_tax_year(trade['dt'], tax_year):
                 continue
 
-            self.convert_currency(trade)
+            event = self.process_trade(trade, tabulations)
+            events.append(event)
 
-            if trade['type'] == 'buy':
-                acb = acb + trade['value']
-                units_held += trade['total']
+        tabulations['events'] = events
 
-                buys += trade['value']
-                events.append({
-                    'action': 'Buy',
-                    'major': trade['major'],
-                    'minor': trade['minor'],
-                    'amount': trade['amount'],
-                    'rate': trade['rate'],
-                    'dt': trade['dt'],
-                    'acb': acb,
-                    'units_held': units_held,
-                    'capital_gain': '',
-                    'capital_gains': '',
-                    'exchange_rate': trade['exchange_rate'],
-                })
+        return tabulations
 
-            if trade['type'] == 'sell':
-                if trade['amount'] > units_held:
-                    raise InsufficientUnitsError(
-                        trade['dt'],
-                        trade['amount'],
-                        units_held,
-                    )
+    def process_trade(self, trade, tabulations):
+        """
+        Perform calculations for an individual trade.
+        """
+        self.convert_currency(trade)
 
-                capital_gain = \
-                    (trade['total']) - ((acb / units_held) * trade['amount'])
-                capital_gains += capital_gain
-                sum_acb_dispositions += ((acb / units_held) * trade['amount'])
+        if trade['type'] == 'buy':
+            event = self.process_buy(trade, tabulations)
+        elif trade['type'] == 'sell':
+            event = self.process_sell(trade, tabulations)
 
-                acb = acb * ((units_held - trade['amount']) / units_held)
-                units_held -= trade['amount']
+        return event
 
-                sells += trade['value']
-
-                events.append({
-                    'action': 'Sell',
-                    'major': trade['major'],
-                    'minor': trade['minor'],
-                    'amount': trade['amount'],
-                    'rate': trade['rate'],
-                    'dt': trade['dt'],
-                    'acb': acb,
-                    'units_held': units_held,
-                    'capital_gain': capital_gain,
-                    'capital_gains': capital_gains,
-                    'exchange_rate': trade['exchange_rate'],
-                })
+    def process_buy(self, trade, tabulations):
+        """
+        Perform calculations for a buy trade.
+        """
+        tabulations['acb'] = tabulations['acb'] + trade['value']
+        tabulations['units_held'] += trade['total']
+        tabulations['buys'] += trade['value']
 
         return {
-            'events': events,
-            'acb': acb,
-            'sum_acb_dispositions': sum_acb_dispositions,
-            'units_held': units_held,
-            'buys': buys,
-            'sells': sells,
-            'capital_gains': capital_gains,
+            'action': 'Buy',
+            'major': trade['major'],
+            'minor': trade['minor'],
+            'amount': trade['amount'],
+            'rate': trade['rate'],
+            'dt': trade['dt'],
+            'acb': tabulations['acb'],
+            'units_held': tabulations['units_held'],
+            'capital_gain': '',
+            'capital_gains': '',
+            'exchange_rate': trade['exchange_rate'],
+        }
+
+    def process_sell(self, trade, tabulations):
+        """
+        Perform calculations for a sell trade.
+        """
+        if trade['amount'] > tabulations['units_held']:
+            raise InsufficientUnitsError(
+                trade['dt'],
+                trade['amount'],
+                tabulations['units_held'],
+            )
+
+        capital_gain = \
+            (trade['total']) - (
+                (tabulations['acb'] / tabulations['units_held'])
+                * trade['amount'])
+        tabulations['capital_gains'] += capital_gain
+        tabulations['sum_acb_dispositions'] += (
+            (tabulations['acb'] / tabulations['units_held'])
+            * trade['amount']
+        )
+
+        tabulations['acb'] = tabulations['acb'] * (
+            (tabulations['units_held'] - trade['amount'])
+            / tabulations['units_held']
+        )
+        tabulations['units_held'] -= trade['amount']
+
+        tabulations['sells'] += trade['value']
+
+        return {
+            'action': 'Sell',
+            'major': trade['major'],
+            'minor': trade['minor'],
+            'amount': trade['amount'],
+            'rate': trade['rate'],
+            'dt': trade['dt'],
+            'acb': tabulations['acb'],
+            'units_held': tabulations['units_held'],
+            'capital_gain': capital_gain,
+            'capital_gains': tabulations['capital_gains'],
+            'exchange_rate': trade['exchange_rate'],
         }
 
     def convert_currency(self, trade):
