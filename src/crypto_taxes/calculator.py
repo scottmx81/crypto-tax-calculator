@@ -118,9 +118,26 @@ class Calculator():
         """
         Perform calculations for a buy trade.
         """
-        tabulations['acb'] = tabulations['acb'] + trade['value']
+        # Units of crypto that the exchange took as commission
+        commission_units = trade['amount'] - trade['total']
+
+        # The value of the crypto units taken, in the base currency
+        commission_fiat = commission_units * trade['rate']
+
+        # The cost of the new crypto units, that we actually received
+        cost_new_units = trade['total'] * trade['rate']
+
+        # The previous ACB before this trade
+        previous_acb = tabulations['acb']
+
+        # New ACB after buy
+        tabulations['acb'] = previous_acb + cost_new_units + commission_fiat
+
+        # Increase units held by the units received after commission taken
         tabulations['units_held'] += trade['total']
-        tabulations['buys'] += trade['value']
+
+        # Increase outlays
+        tabulations['buys'] += cost_new_units + commission_fiat
 
         return Decimal('0')
 
