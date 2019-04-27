@@ -70,7 +70,7 @@ class Calculator():
                 else Decimal('0'),
             'sum_acb_dispositions': Decimal('0'),
             'capital_gains': Decimal('0'),
-            'buys': Decimal('0'),
+            'outlays': Decimal('0'),
             'sells': Decimal('0'),
         }
 
@@ -137,7 +137,7 @@ class Calculator():
         tabulations['units_held'] += trade['total']
 
         # Increase outlays
-        tabulations['buys'] += cost_new_units + commission_fiat
+        tabulations['outlays'] += cost_new_units + commission_fiat
 
         return Decimal('0')
 

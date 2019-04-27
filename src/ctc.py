@@ -234,7 +234,7 @@ def print_result(result):
         result['sum_acb_dispositions']
     ))
     print('Units Held,{}'.format(result['units_held']))
-    print('Buys,${}'.format(result['buys']))
+    print('Outlays,${}'.format(result['outlays']))
     print('Sells,${}'.format(result['sells']))
     print('Capital gains,${}'.format(result['capital_gains']))
 

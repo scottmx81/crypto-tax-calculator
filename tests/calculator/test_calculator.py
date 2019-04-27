@@ -18,7 +18,7 @@ def test_process_buy_first():
     tabulations = {
         'acb': Decimal('0'),
         'units_held': Decimal('0'),
-        'buys': Decimal('0'),
+        'outlays': Decimal('0'),
     }
 
     sut = Calculator()
