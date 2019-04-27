@@ -235,7 +235,7 @@ def print_result(result):
     ))
     print('Units Held,{}'.format(result['units_held']))
     print('Outlays,${}'.format(result['outlays']))
-    print('Sells,${}'.format(result['sells']))
+    print('Proceeds,${}'.format(result['proceeds']))
     print('Capital gains,${}'.format(result['capital_gains']))
 
 

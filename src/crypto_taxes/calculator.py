@@ -71,7 +71,7 @@ class Calculator():
             'sum_acb_dispositions': Decimal('0'),
             'capital_gains': Decimal('0'),
             'outlays': Decimal('0'),
-            'sells': Decimal('0'),
+            'proceeds': Decimal('0'),
         }
 
         events = []
@@ -167,7 +167,7 @@ class Calculator():
             / tabulations['units_held']
         )
         tabulations['units_held'] -= trade['amount']
-        tabulations['sells'] += trade['value']
+        tabulations['proceeds'] += trade['value']
 
         return capital_gain
 
