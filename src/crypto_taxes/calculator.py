@@ -145,29 +145,37 @@ class Calculator():
         """
         Perform calculations for a sell trade.
         """
-        if trade['amount'] > tabulations['units_held']:
-            raise InsufficientUnitsError(
-                trade['dt'],
-                trade['amount'],
-                tabulations['units_held'],
-            )
+        unit_price = trade['rate']
+        units_held = tabulations['units_held']
+        units_sold = trade['amount']
+        previous_units_held = tabulations['units_held']
+        commission_fiat = trade['value'] - trade['total']
+        total_acb = tabulations['acb']
 
+        # Raise error if selling more units than held
+        if units_sold > units_held:
+            raise InsufficientUnitsError(trade['dt'], units_sold, units_held)
+
+        # Calculate the new ACB after the sell
+        new_total_acb = \
+            total_acb \
+            * ((previous_units_held - units_sold) / previous_units_held)
+
+        # Calculate the capital gain from
         capital_gain = \
-            (trade['total']) - (
-                (tabulations['acb'] / tabulations['units_held'])
-                * trade['amount'])
-        tabulations['capital_gains'] += capital_gain
-        tabulations['sum_acb_dispositions'] += (
-            (tabulations['acb'] / tabulations['units_held'])
-            * trade['amount']
-        )
+            (unit_price * units_sold) \
+            - commission_fiat \
+            - ((total_acb / previous_units_held) * units_sold)
 
-        tabulations['acb'] = tabulations['acb'] * (
-            (tabulations['units_held'] - trade['amount'])
-            / tabulations['units_held']
-        )
+        # Average cost of the units sold
+        avg_cost_units_sold = (total_acb / units_held) * units_sold
+
+        # Update the tabulations
+        tabulations['acb'] = new_total_acb
+        tabulations['capital_gains'] += capital_gain
         tabulations['units_held'] -= trade['amount']
         tabulations['proceeds'] += trade['value']
+        tabulations['sum_acb_dispositions'] += avg_cost_units_sold
 
         return capital_gain
 
