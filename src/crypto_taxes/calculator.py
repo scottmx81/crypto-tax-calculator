@@ -152,25 +152,29 @@ class Calculator():
         commission_fiat = trade['value'] - trade['total']
         total_acb = tabulations['acb']
 
-        # Raise error if selling more units than held
         if units_sold > units_held:
             raise InsufficientUnitsError(trade['dt'], units_sold, units_held)
 
-        # Calculate the new ACB after the sell
-        new_total_acb = \
-            total_acb \
-            * ((previous_units_held - units_sold) / previous_units_held)
+        new_total_acb = self.calculate_acb_post_disposition(
+            total_acb,
+            previous_units_held,
+            units_sold,
+        )
 
-        # Calculate the capital gain from
-        capital_gain = \
-            (unit_price * units_sold) \
-            - commission_fiat \
-            - ((total_acb / previous_units_held) * units_sold)
+        capital_gain = self.calculate_capital_gain(
+            unit_price,
+            units_sold,
+            commission_fiat,
+            total_acb,
+            previous_units_held,
+        )
 
-        # Average cost of the units sold
-        avg_cost_units_sold = (total_acb / units_held) * units_sold
+        avg_cost_units_sold = self.calculate_avg_cost_units_sold(
+            total_acb,
+            units_held,
+            units_sold,
+        )
 
-        # Update the tabulations
         tabulations['acb'] = new_total_acb
         tabulations['capital_gains'] += capital_gain
         tabulations['units_held'] -= trade['amount']
@@ -178,6 +182,34 @@ class Calculator():
         tabulations['sum_acb_dispositions'] += avg_cost_units_sold
 
         return capital_gain
+
+    def calculate_acb_post_disposition(self, total_acb, previous_units_held, units_sold):
+        """
+        Calculate the new ACB after the disposition.
+        """
+        return total_acb \
+            * ((previous_units_held - units_sold) / previous_units_held)
+
+    def calculate_capital_gain(
+            self,
+            unit_price,
+            units_sold,
+            commission_fiat,
+            total_acb,
+            previous_units_held,
+    ):
+        """
+        Calculate the capital gain (or loss).
+        """
+        return (unit_price * units_sold) \
+            - commission_fiat \
+            - ((total_acb / previous_units_held) * units_sold)
+
+    def calculate_avg_cost_units_sold(self, total_acb, units_held, units_sold):
+        """
+        Calculate the average cost of the units that were sold.
+        """
+        return (total_acb / units_held) * units_sold
 
     def convert_currency(self, trade):
         """

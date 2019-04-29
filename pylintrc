@@ -1,0 +1,4 @@
+[MESSAGES CONTROL]
+# R0201 Method could be a function
+# R0913 Too many arguments
+disable=R0201,R0913
