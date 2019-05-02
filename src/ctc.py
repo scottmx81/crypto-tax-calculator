@@ -3,6 +3,7 @@
 Crypto tax calculator.
 """
 import argparse
+from collections import namedtuple
 import csv
 from decimal import Decimal
 from sys import stderr
@@ -170,7 +171,8 @@ def find_missing_exchange_rates(trades, exchange_rates, base_currency):
     """
     Validate exchange rates are present for all trade dates.
     """
-    missing_dates = []
+    DateCurrencyPair = namedtuple('DateCurrencyPair', ['date', 'currency'])
+    missing = set()
 
     for trade in trades:
         if trade['minor'] == base_currency:
@@ -180,12 +182,9 @@ def find_missing_exchange_rates(trades, exchange_rates, base_currency):
 
         if date_string not in exchange_rates or \
                 trade['minor'] not in exchange_rates[date_string]:
-            missing_dates.append({
-                'date': date_string,
-                'currency': trade['minor'],
-            })
+            missing.add(DateCurrencyPair(date_string, trade['minor']))
 
-    return missing_dates
+    return missing
 
 
 def print_missing_exchange_rates(missing_exchange_rates):
@@ -197,8 +196,8 @@ def print_missing_exchange_rates(missing_exchange_rates):
     for missing_exchange_rate in missing_exchange_rates:
         print(
             '{} {}'.format(
-                missing_exchange_rate['date'],
-                missing_exchange_rate['currency'],
+                missing_exchange_rate.date,
+                missing_exchange_rate.currency,
             ),
             file=stderr
         )
